@@ -7,7 +7,12 @@ local carro = {
    tileSizeRX = 160,
    tileSizeRY = 128,
    timer = 0,
-   dif = 100
+   dif = 100,
+   tempo = os.time(),
+   passado = 0, 
+   intervalo = 5,
+   xvelho = 0,
+   yvelho = 0
 }
 
 function carro.loadQuads(nx, ny)
@@ -26,23 +31,68 @@ function carro.load()
   carro.loadQuads(3,3)
 end
 
+function carro.spawn()
+  local x = math.floor(math.random((width/4)-carro.tileSizeRX,(3*width/4)-carro.tileSizeRX))
+    local y= - carro.tileSizeRY
+    local dth = carro.tileSizeRX;
+    local ght = carro.tileSizeRX;
+  while colisao (xvelho, yvelho,dth, ght, x,y,dth,ght) do 
+     x = math.floor(math.random((width/4)-carro.tileSizeRX,(3*width/4)-carro.tileSizeRX))
+     y= - carro.tileSizeRY
+  end
+  table.insert(carro,{ x,y })
+  carro.xvelho = x
+  carro.yvelho = y 
+end 
+
+function carro.generator()
+      tempo = os.time()
+    if (tempo - carro.passado) > carro.intervalo then
+      
+      carro.spawn()
+      carro.spawn()
+      
+      carro.passado = tempo
+      if carro.intervalo < 0.8 then
+        carro.intervalo = 3
+      end
+      carro.intervalo = carro.intervalo -1
+    end
+    
+
+end
+
+
 function carro.update(dt)
 
- 
-  carro.timer = carro.timer + 1
-  if carro.timer % 0.01 == 0 then -- a cada 5 segundos a dificuldade aumenta 0.5
+  carro.timer = os.time()
+  if carro.timer % 5 == 0 then -- a cada 5 segundos a dificuldade aumenta 0.5
     carro.dif = carro.dif - 0.1
   end
   
-  if carro.timer % (50/(carro.dif))^(1/2) < 0.02 then 
-   table.insert(carro,{ x = math.floor(math.random((width/4)-carro.tileSizeRX,(3*width/4)-carro.tileSizeRX)),y = - carro.tileSizeRY})
-  end 
+  carro.generator()
+
+  if carro.timer > 10 then --sprites dinamica
+    if carro.anim < 7 then
+      carro.anim = carro.anim + 1
+    else
+      carro.anim = 1
+    end
+    carro.timer = 0
+  end
+  
   
     for i, v in ipairs(carro) do 
      v.y = v.y + 200*dt
   end
 
 end
+
+
+
+
+
+
 
 function carro.draw()
     --love.graphics.draw(carro.carRed, carro.quads[1], width/2, height/2)
